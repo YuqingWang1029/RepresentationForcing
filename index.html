@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="description"
+        content="Representation Forcing for Bottleneck-Free Unified Multimodal Models">
+  <meta name="keywords" content="Representation Forcing, Unified Multimodal Models, Pixel-Space Generation, Diffusion, Autoregressive">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <meta property="og:title" content="Representation Forcing for Bottleneck-Free Unified Multimodal Models">
+  <meta property="og:description" content="A simple technique that closes the pixel-space quality gap in unified multimodal models without any pretrained VAE.">
+  <meta property="og:type" content="article">
+
+  <title>Representation Forcing for Bottleneck-Free Unified Multimodal Models</title>
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet">
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-slider.min.css">
+  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+  <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="./static/js/fontawesome.all.min.js"></script>
+  <script src="./static/js/bulma-carousel.min.js"></script>
+  <script src="./static/js/bulma-slider.min.js"></script>
+  <script src="./static/js/index.js"></script>
+
+  <style>
+    body, html {
+      background-color: #ffffff;
+      font-family: 'Google Sans', 'Noto Sans', sans-serif;
+    }
+
+    .publication-title {
+      font-size: 2.5rem !important;
+      line-height: 1.2 !important;
+      width: 100%;
+      max-width: 950px;
+      margin: 0 auto;
+    }
+
+    .section { padding: 3rem 1.5rem; }
+    .section.tight { padding: 1.5rem 1.5rem; }
+
+    .title-centered {
+      position: relative;
+      text-align: center;
+      color: #0074D9;
+      margin-bottom: 2.5rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .title-centered::after {
+      content: "";
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 3px;
+      background-color: #0074D9;
+      border-radius: 2px;
+    }
+
+    .contribution-item {
+      color: #333;
+      font-weight: 400;
+      font-size: 0.98rem;
+      line-height: 1.55;
+      padding: 14px 18px;
+      background-color: #f8f9ff;
+      border-radius: 8px;
+      margin-bottom: 12px !important;
+      transition: all 0.3s ease;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .contribution-item:hover {
+      background-color: #f0f4ff;
+      transform: translateX(4px);
+    }
+    .contribution-item strong {
+      color: #0074D9 !important;
+      font-weight: 600;
+    }
+    .contribution-item a, .contribution-item p {
+      color: #333 !important;
+    }
+    .contribution-item .num {
+      flex-shrink: 0;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: #0074D9;
+      color: #fff;
+      font-weight: 600;
+      font-size: 0.85rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+
+    .content img, .method-figure {
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto 0.5rem auto;
+      display: block;
+      border-radius: 8px;
+      background-color: #ffffff;
+      transition: transform 0.3s ease;
+    }
+    .full-width-container { width: 100%; max-width: 1000px; margin: 0 auto; }
+    .full-width-comparison { width: 100%; max-width: 100%; border-radius: 8px; }
+    .caption-container { width: 100%; max-width: 1000px; margin: 0 auto; }
+    .standard-figure { max-width: 900px; width: 100%; }
+    .figure-caption {
+      margin-top: 0.8rem !important;
+      padding-top: 0 !important;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      color: #444;
+    }
+    img[src$=".png"], img[src$=".svg"], img[src$=".jpg"] {
+      background-color: #ffffff !important;
+    }
+
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      background-color: rgba(255, 255, 255, 0.95);
+      transition: all 0.3s ease;
+    }
+    strong { color: #0074D9; font-weight: 600; }
+
+    .method-title {
+      font-size: 1.5rem;
+      color: #0074D9;
+      font-weight: 600;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    code {
+      background-color: transparent !important;
+      color: #333 !important;
+      padding: 0 !important;
+      font-family: monospace;
+    }
+    pre {
+      background-color: transparent !important;
+      padding: 0 !important;
+      border: none !important;
+      margin: 0 !important;
+    }
+
+    .publication-authors .author-block { margin-right: 0.15em; }
+    .publication-authors a { color: #0074D9; }
+
+    /* ============ Experiment tables ============ */
+    .result-table-wrap {
+      overflow-x: auto;
+      margin: 1.5rem auto;
+      max-width: 1000px;
+    }
+    table.result-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      color: #1a1a1a;
+      background: #ffffff;
+    }
+    table.result-table thead th {
+      background-color: #0074D9;
+      color: #ffffff;
+      font-weight: 600;
+      padding: 9px 8px;
+      text-align: center;
+      border-bottom: 2px solid #0074D9;
+      white-space: nowrap;
+    }
+    table.result-table thead th.first-col { text-align: left; }
+    table.result-table tbody td {
+      padding: 7px 8px;
+      text-align: center;
+      border-bottom: 1px solid #eef1f7;
+    }
+    table.result-table tbody td.first-col {
+      text-align: left;
+      font-weight: 500;
+    }
+    table.result-table tbody tr.section-divider td {
+      background-color: #f0f4ff;
+      font-style: italic;
+      color: #0074D9;
+      font-weight: 600;
+      padding: 6px 8px;
+      text-align: left;
+    }
+    table.result-table tbody tr.ours td {
+      background-color: #f8f9ff;
+      font-weight: 600;
+    }
+    table.result-table tbody tr.ours td strong { color: #0074D9; }
+    .result-table-note {
+      max-width: 1000px;
+      margin: 0.4rem auto 0 auto;
+      font-size: 0.85rem;
+      color: #666;
+      text-align: center;
+    }
+    .delta-up { color: #2a9d4a; font-size: 0.78rem; }
+    .delta-down { color: #c0392b; font-size: 0.78rem; }
+  </style>
+</head>
+<body>
+
+<nav class="navbar" role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false">
+      <span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span>
+    </a>
+  </div>
+  <div class="navbar-menu">
+    <div class="navbar-start" style="flex-grow: 1; justify-content: center;">
+      <div class="navbar-item has-dropdown is-hoverable">
+        <a class="navbar-link">More Research</a>
+        <div class="navbar-dropdown">
+          <a class="navbar-item" href="https://yuqingwang1029.github.io/Loong-video/">Loong</a>
+          <a class="navbar-item" href="https://yuqingwang1029.github.io/PAR-project/">PAR</a>
+          <a class="navbar-item" href="https://yuqingwang1029.github.io/TokenBridge/">TokenBridge</a>
+          <a class="navbar-item" href="https://yuqingwang1029.github.io/CubiD/">CubiD</a>
+          <a class="navbar-item" href="#">Representation Forcing</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ============ Hero ============ -->
+<section class="hero">
+  <div class="hero-body">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+          <h1 class="title is-1 publication-title">Representation Forcing for Bottleneck-Free Unified Multimodal Models</h1>
+
+          <div class="is-size-5 publication-authors" style="margin-top: 1rem;">
+            <span class="author-block">
+              <a href="https://scholar.google.com/citations?user=QC7nNe0AAAAJ&hl=zh-CN">Yuqing Wang</a><sup>1,2,&dagger;</sup>,</span>
+            <span class="author-block">
+              <a href="https://scholar.google.com/citations?user=xXMj6_EAAAAJ&hl=zh-CN">Zhijie Lin</a><sup>2</sup>,</span>
+            <span class="author-block">
+              <a href="https://scholar.google.com/citations?user=Rfj4jWoAAAAJ&hl=en">Ceyuan Yang</a><sup>2</sup>,</span>
+            <span class="author-block">
+              <a href="https://scholar.google.com/citations?user=uPmTOHAAAAAJ&hl=zh-CN">Yang Zhao</a><sup>2</sup>,</span>
+            <span class="author-block">Fei Xiao<sup>2</sup>,</span>
+            <span class="author-block">
+              <a href="https://hehao13.github.io/">Hao He</a><sup>3,2,&dagger;</sup>,</span>
+            <span class="author-block">
+              <a href="https://kevinz8866.github.io/">Qi Zhao</a><sup>2</sup>,</span>
+            <span class="author-block">
+              <a href="https://quantumiracle.github.io/webpage/">Zihan Ding</a><sup>2</sup>,</span>
+            <span class="author-block">
+              <a href="https://g-u-n.github.io/">Fuyun Wang</a><sup>3,2,&dagger;</sup>,</span>
+            <span class="author-block">
+              <a href="https://scholar.google.com/citations?user=us4prRUAAAAJ&hl=zh-CN">Shuai Wang</a><sup>4,2,&dagger;</sup>,</span>
+            <span class="author-block">
+              <a href="https://scholar.google.com/citations?user=bgi03YYAAAAJ&hl=zh-CN">Youliang Zhang</a><sup>5,2,&dagger;</sup>,</span>
+            <span class="author-block">
+              <a href="https://haoqifan.github.io/">Haoqi Fan</a><sup>2</sup>,</span>
+            <span class="author-block">
+              <a href="https://xh-liu.github.io/">Xihui Liu</a><sup>1,&#9993;</sup></span>
+          </div>
+
+          <div class="is-size-6 publication-authors" style="margin-top: 0.5rem;">
+            <span class="author-block"><sup>1</sup>University of Hong Kong,</span>
+            <span class="author-block"><sup>2</sup>ByteDance Seed,</span>
+            <span class="author-block"><sup>3</sup>The Chinese University of Hong Kong,</span>
+            <span class="author-block"><sup>4</sup>Nanjing University,</span>
+            <span class="author-block"><sup>5</sup>Tsinghua University</span>
+          </div>
+
+          <div class="is-size-7 publication-authors" style="margin-top: 0.4rem; color: #666;">
+            <sup>&dagger;</sup>Work done during an internship at ByteDance Seed. &nbsp;
+            <sup>&#9993;</sup>Corresponding author.
+          </div>
+
+          <div class="column has-text-centered" style="margin-top: 1rem;">
+            <div class="publication-links">
+              <span class="link-block">
+                <a href="#" target="_blank">
+                  <span class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon"><i class="ai ai-arxiv"></i></span>
+                    <span>arXiv</span>
+                  </span>
+                </a>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 1. Demo gallery (image first) ============ -->
+<section class="section tight">
+  <div class="full-width-container">
+    <div class="content" data-aos="fade-up">
+      <img src="./static/images/demo.png" alt="Generation gallery at 1024x1024" class="full-width-comparison">
+      <div class="caption-container">
+        <div class="content has-text-centered figure-caption" data-aos="fade-up" data-aos-delay="150">
+          <p>
+            Text-to-image generation results at 1024 &times; 1024 resolution from our pixel-space unified model with Representation Forcing.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 2. Abstract ============ -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3 title-centered" data-aos="fade-up">Abstract</h2>
+        <div class="content has-text-justified" data-aos="fade-up" data-aos-delay="100">
+          <p>
+            Unified multimodal models (UMMs) aim to handle perception and generation in a single model. Yet existing UMMs still rely on a frozen, separately pretrained VAE for image generation, imposing a structural bottleneck. Naively removing it introduces a quality gap, as the model must learn both high-level structure and low-level details from raw pixels.
+          </p>
+          <p>
+            In this paper, we propose <strong>Representation Forcing (RF)</strong>, a technique that closes this gap by making representation prediction a native capability of the model. Concretely, RF forces the decoder to autoregressively predict visual representations as intermediate tokens before pixels; these tokens then stay in context to guide pixel diffusion within the same backbone. By turning representations from perception outputs into generation targets, RF eliminates the need for any external generative latent space.
+          </p>
+          <p>
+            We find that RF benefits both understanding and generation. On image generation, our pixel-space model with RF matches state-of-the-art VAE-based unified models. On image understanding, pixel-space RF generally outperforms its VAE-based variant. Together, these results offer an effective step toward end-to-end, bottleneck-free UMMs.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 3. Main Contributions ============ -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3 title-centered" data-aos="fade-up">Main Contributions</h2>
+        <div class="content">
+          <ul style="list-style-type: none; padding: 0;">
+            <li class="contribution-item" data-aos="fade-up" data-aos-delay="100">
+              <span class="num">1</span>
+              <span><strong>Representation Forcing.</strong> A simple technique that closes the pixel-space generation gap in unified multimodal models by training the decoder to autoregressively predict visual representations as intermediate tokens, without any pretrained VAE.</span>
+            </li>
+            <li class="contribution-item" data-aos="fade-up" data-aos-delay="200">
+              <span class="num">2</span>
+              <span><strong>Benefits both generation and understanding.</strong> Our pixel-space model with RF matches VAE-based unified models on generation and outperforms its VAE-based counterpart on understanding, suggesting pixel-space generation is more compatible with unified multimodal modeling.</span>
+            </li>
+            <li class="contribution-item" data-aos="fade-up" data-aos-delay="300">
+              <span class="num">3</span>
+              <span><strong>A step toward fully end-to-end UMMs.</strong> Perception and generation share a single, end-to-end-learned representation space, rather than coordinate across separately pretrained components.</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 4. Architectural Comparison ============ -->
+<section class="section">
+  <div class="full-width-container">
+    <h2 class="title is-3 title-centered" data-aos="fade-up">Architectural Comparison</h2>
+    <div class="content" data-aos="fade-up" data-aos-delay="100">
+      <img src="./static/images/teaser.png" alt="Architectural comparison" class="full-width-comparison">
+      <div class="caption-container">
+        <div class="content has-text-justified figure-caption" data-aos="fade-up" data-aos-delay="150">
+          <p>
+            <strong>(a) Prevailing UMMs</strong> rely on a frozen VAE encoder and decoder for image generation, creating a structural bottleneck.
+            <strong>(b) Naively removing the VAE</strong> and generating directly in pixel space eliminates this bottleneck but loses structural guidance, leading to a quality gap.
+            <strong>(c) Representation Forcing</strong> closes this gap by training the decoder to autoregressively predict visual representations (Rep head) before pixel generation. These representations match features from the model's own understanding encoder and remain in context within the shared transformer, providing structural guidance for pixel-space diffusion without any external latent space.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 5. Method ============ -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3 title-centered" data-aos="fade-up">Method</h2>
+
+        <h3 class="method-title mt-6" data-aos="fade-up">Training Pipeline of Representation Forcing</h3>
+        <div class="full-width-container" data-aos="fade-up" data-aos-delay="100">
+          <div class="has-text-centered">
+            <img src="./static/images/method.png" alt="RF training pipeline" class="full-width-comparison">
+            <div class="caption-container">
+              <div class="content has-text-justified figure-caption" data-aos="fade-up" data-aos-delay="150">
+                <p>
+                  <strong>Left:</strong> The decoder processes a unified sequence of text tokens (T), representation tokens (R), and pixel patches (P) within a shared transformer. Text and representation tokens are predicted autoregressively under next-token prediction (&#8466;<sub>LM</sub> and &#8466;<sub>Rep</sub>), while pixel patches are generated via bidirectional diffusion from noise (&#8466;<sub>FM</sub>). The image encoder provides continuous visual features to the transformer for understanding tasks.
+                  <strong>Right:</strong> For generation training, an EMA copy of the image encoder extracts features from the ground-truth image, which are discretized via online quantization into representation tokens. These tokens provide both training targets for &#8466;<sub>Rep</sub> and teacher-forcing inputs at R positions. At inference, the right panel is bypassed entirely: the decoder predicts representation tokens from the text prompt alone, and these tokens guide pixel-space diffusion.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <h3 class="method-title mt-6" data-aos="fade-up">Key Design Choices</h3>
+        <div class="content" data-aos="fade-up" data-aos-delay="100">
+          <ul class="ml-5">
+            <li class="mb-3"><strong>Representations from the understanding encoder.</strong> Rather than relying on an external latent space, RF derives intermediate representations from the model's own jointly trained understanding encoder. Features are discretized via online vector quantization into representation tokens, using an EMA copy of the encoder for stable targets and Sinkhorn-Knopp balancing to prevent codebook collapse.</li>
+            <li class="mb-3"><strong>Discrete representation tokens.</strong> We discretize the visual representations so they can be predicted under the same next-token prediction objective as text tokens — unifying language modeling and representation prediction within a single autoregressive stream.</li>
+            <li class="mb-3"><strong>Mixture-of-Transformers backbone.</strong> All tokens share self-attention layers but are routed to three modality-specific feed-forward experts: understanding, representation prediction, and pixel generation.</li>
+            <li class="mb-3"><strong>End-to-end objective:</strong> &#8466; = &#8466;<sub>LM</sub> + &#8466;<sub>FM</sub> + &#8466;<sub>Rep</sub>. Cross-entropy losses for text and representation tokens; flow-matching loss with <em>x</em>-prediction for pixels.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 6. Experiments ============ -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3 title-centered" data-aos="fade-up">Experiments</h2>
+
+        <h3 class="method-title mt-6" data-aos="fade-up">Image Generation</h3>
+        <div class="content" data-aos="fade-up" data-aos-delay="100">
+          <p>
+            On GenEval and DPG-Bench, our pixel-space model with RF (<strong>RF-Pixel</strong>) matches state-of-the-art VAE-based unified multimodal models &mdash; without any separately pretrained generative module.
+          </p>
+        </div>
+
+        <div class="result-table-wrap" data-aos="fade-up" data-aos-delay="150">
+          <table class="result-table">
+            <thead>
+              <tr>
+                <th class="first-col" rowspan="2">Model</th>
+                <th colspan="7">GenEval</th>
+                <th>DPG</th>
+              </tr>
+              <tr>
+                <th>Single Obj.</th>
+                <th>Two Obj.</th>
+                <th>Counting</th>
+                <th>Colors</th>
+                <th>Position</th>
+                <th>Color Attri.</th>
+                <th>Overall&uarr;</th>
+                <th>Overall&uarr;</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="section-divider"><td colspan="9">Generation Only</td></tr>
+              <tr><td class="first-col">PixArt-&alpha;</td><td>0.98</td><td>0.50</td><td>0.44</td><td>0.80</td><td>0.08</td><td>0.07</td><td>0.48</td><td>71.11</td></tr>
+              <tr><td class="first-col">SDv2.1</td><td>0.98</td><td>0.51</td><td>0.44</td><td>0.85</td><td>0.07</td><td>0.17</td><td>0.50</td><td>68.09</td></tr>
+              <tr><td class="first-col">DALL-E 2</td><td>0.94</td><td>0.66</td><td>0.49</td><td>0.77</td><td>0.10</td><td>0.19</td><td>0.52</td><td>&ndash;</td></tr>
+              <tr><td class="first-col">SDXL</td><td>0.98</td><td>0.74</td><td>0.39</td><td>0.85</td><td>0.15</td><td>0.23</td><td>0.55</td><td>74.65</td></tr>
+              <tr><td class="first-col">DALL-E 3</td><td>0.96</td><td>0.87</td><td>0.47</td><td>0.83</td><td>0.43</td><td>0.45</td><td>0.67</td><td>83.50</td></tr>
+              <tr><td class="first-col">SD3-Medium</td><td>0.99</td><td>0.94</td><td>0.72</td><td>0.89</td><td>0.33</td><td>0.60</td><td>0.74</td><td>84.08</td></tr>
+              <tr><td class="first-col">FLUX.1-dev<sup>&dagger;</sup></td><td>0.98</td><td>0.93</td><td>0.75</td><td>0.93</td><td>0.68</td><td>0.65</td><td>0.82</td><td>84.00</td></tr>
+              <tr><td class="first-col">Seedream 3.0</td><td>0.99</td><td>0.96</td><td>0.91</td><td>0.93</td><td>0.47</td><td>0.80</td><td>0.84</td><td>88.27</td></tr>
+              <tr><td class="first-col">Z-Image-Turbo</td><td>1.00</td><td>0.95</td><td>0.77</td><td>0.89</td><td>0.65</td><td>0.68</td><td>0.82</td><td>84.86</td></tr>
+              <tr><td class="first-col">Qwen-Image</td><td>0.99</td><td>0.92</td><td>0.89</td><td>0.88</td><td>0.76</td><td>0.77</td><td>0.87</td><td>88.32</td></tr>
+
+              <tr class="section-divider"><td colspan="9">Unified Models</td></tr>
+              <tr><td class="first-col">Chameleon</td><td>&ndash;</td><td>&ndash;</td><td>&ndash;</td><td>&ndash;</td><td>&ndash;</td><td>&ndash;</td><td>0.39</td><td>&ndash;</td></tr>
+              <tr><td class="first-col">LWM</td><td>0.93</td><td>0.41</td><td>0.46</td><td>0.79</td><td>0.09</td><td>0.15</td><td>0.47</td><td>&ndash;</td></tr>
+              <tr><td class="first-col">SEED-X</td><td>0.97</td><td>0.58</td><td>0.26</td><td>0.80</td><td>0.19</td><td>0.14</td><td>0.49</td><td>&ndash;</td></tr>
+              <tr><td class="first-col">TokenFlow-XL</td><td>0.95</td><td>0.60</td><td>0.41</td><td>0.81</td><td>0.16</td><td>0.24</td><td>0.55</td><td>73.38</td></tr>
+              <tr><td class="first-col">ILLUME</td><td>0.99</td><td>0.86</td><td>0.45</td><td>0.71</td><td>0.39</td><td>0.28</td><td>0.61</td><td>&ndash;</td></tr>
+              <tr><td class="first-col">Janus</td><td>0.97</td><td>0.68</td><td>0.30</td><td>0.84</td><td>0.46</td><td>0.42</td><td>0.61</td><td>&ndash;</td></tr>
+              <tr><td class="first-col">Transfusion</td><td>&ndash;</td><td>&ndash;</td><td>&ndash;</td><td>&ndash;</td><td>&ndash;</td><td>&ndash;</td><td>0.63</td><td>&ndash;</td></tr>
+              <tr><td class="first-col">Emu3<sup>&dagger;</sup></td><td>0.99</td><td>0.81</td><td>0.42</td><td>0.80</td><td>0.49</td><td>0.45</td><td>0.66</td><td>81.60</td></tr>
+              <tr><td class="first-col">Show-o</td><td>0.98</td><td>0.80</td><td>0.66</td><td>0.84</td><td>0.31</td><td>0.50</td><td>0.68</td><td>&ndash;</td></tr>
+              <tr><td class="first-col">Show-o2</td><td>1.00</td><td>0.87</td><td>0.58</td><td>0.92</td><td>0.52</td><td>0.62</td><td>0.76</td><td>86.14</td></tr>
+              <tr><td class="first-col">Janus-Pro-7B</td><td>0.99</td><td>0.89</td><td>0.59</td><td>0.90</td><td>0.79</td><td>0.66</td><td>0.80</td><td>84.19</td></tr>
+              <tr><td class="first-col">MetaQuery-XL<sup>&dagger;</sup></td><td>&ndash;</td><td>&ndash;</td><td>&ndash;</td><td>&ndash;</td><td>&ndash;</td><td>&ndash;</td><td>0.80</td><td>82.05</td></tr>
+              <tr><td class="first-col">BLIP3-o</td><td>&ndash;</td><td>&ndash;</td><td>&ndash;</td><td>&ndash;</td><td>&ndash;</td><td>&ndash;</td><td>0.84</td><td>81.60</td></tr>
+              <tr><td class="first-col">UniWorld-V1<sup>&dagger;</sup></td><td>0.98</td><td>0.93</td><td>0.81</td><td>0.89</td><td>0.74</td><td>0.71</td><td>0.84</td><td>81.38</td></tr>
+              <tr><td class="first-col">OmniGen2<sup>&dagger;</sup></td><td>0.99</td><td>0.96</td><td>0.74</td><td>0.98</td><td>0.71</td><td>0.75</td><td>0.86</td><td>83.57</td></tr>
+              <tr><td class="first-col">BAGEL</td><td>0.99</td><td>0.94</td><td>0.81</td><td>0.88</td><td>0.64</td><td>0.63</td><td>0.82</td><td>85.07</td></tr>
+              <tr><td class="first-col">BAGEL<sup>&dagger;</sup></td><td>0.98</td><td>0.95</td><td>0.84</td><td>0.95</td><td>0.78</td><td>0.77</td><td>0.88</td><td>&ndash;</td></tr>
+
+              <tr class="ours"><td class="first-col"><strong>RF-Pixel (ours)</strong></td><td>0.99</td><td>0.93</td><td>0.84</td><td>0.89</td><td>0.74</td><td>0.66</td><td>0.84</td><td>84.15</td></tr>
+              <tr class="ours"><td class="first-col"><strong>RF-Pixel (ours)<sup>&dagger;</sup></strong></td><td>0.98</td><td>0.95</td><td>0.88</td><td>0.87</td><td>0.92</td><td>0.70</td><td>0.88</td><td>&ndash;</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="result-table-note"><sup>&dagger;</sup> with LLM rewriter.</p>
+
+        <h3 class="method-title mt-6" data-aos="fade-up">Image Understanding</h3>
+        <div class="content" data-aos="fade-up" data-aos-delay="100">
+          <p>
+            Two takeaways: <strong>(i)</strong> RF consistently improves general visual understanding under both generation pathways; <strong>(ii)</strong> Pixel+RF outperforms VAE+RF on most benchmarks &mdash; removing the external VAE lets understanding and generation share a single representation space more tightly, indicating pixel-space generation is more compatible with unified multimodal modeling.
+          </p>
+        </div>
+
+        <div class="result-table-wrap" data-aos="fade-up" data-aos-delay="150">
+          <table class="result-table">
+            <thead>
+              <tr>
+                <th class="first-col" rowspan="2">Method</th>
+                <th colspan="5">General Visual Understanding</th>
+                <th colspan="3">Document &amp; Diagram</th>
+              </tr>
+              <tr>
+                <th>MMMU</th>
+                <th>HalluBench</th>
+                <th>MME<sup>*</sup></th>
+                <th>BLINK</th>
+                <th>RealWorldQA</th>
+                <th>AI2D</th>
+                <th>DocVQA</th>
+                <th>ChartQA</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td class="first-col">VLM-only</td><td>56.2</td><td>65.0</td><td>79.7</td><td>56.2</td><td>65.8</td><td>90.3</td><td>89.3</td><td>86.0</td></tr>
+              <tr><td class="first-col">VAE</td><td>51.0</td><td>55.7</td><td>71.3</td><td>52.2</td><td>65.2</td><td>90.7</td><td>90.0</td><td>78.8</td></tr>
+              <tr><td class="first-col">VAE + RF</td>
+                <td>49.6 <span class="delta-down">&minus;1.4</span></td>
+                <td>61.3 <span class="delta-up">+5.6</span></td>
+                <td>79.3 <span class="delta-up">+8.0</span></td>
+                <td>52.9 <span class="delta-up">+0.7</span></td>
+                <td>66.6 <span class="delta-up">+1.4</span></td>
+                <td>87.8 <span class="delta-down">&minus;2.9</span></td>
+                <td>88.3 <span class="delta-down">&minus;1.7</span></td>
+                <td>80.5 <span class="delta-up">+1.7</span></td>
+              </tr>
+              <tr><td class="first-col">Pixel</td><td>49.9</td><td>63.7</td><td>76.6</td><td>49.4</td><td>63.1</td><td>85.8</td><td>90.0</td><td>81.7</td></tr>
+              <tr class="ours"><td class="first-col"><strong>Pixel + RF</strong></td>
+                <td>54.2 <span class="delta-up">+4.3</span></td>
+                <td>64.8 <span class="delta-up">+1.1</span></td>
+                <td>80.2 <span class="delta-up">+3.6</span></td>
+                <td>53.0 <span class="delta-up">+3.6</span></td>
+                <td>65.8 <span class="delta-up">+2.7</span></td>
+                <td>90.3 <span class="delta-up">+4.5</span></td>
+                <td>88.0 <span class="delta-down">&minus;2.0</span></td>
+                <td>81.3 <span class="delta-down">&minus;0.4</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="result-table-note">MME<sup>*</sup> reports average accuracy across all perception and cognition questions. Deltas are vs. the corresponding non-RF baseline.</p>
+
+        <h3 class="method-title mt-6" data-aos="fade-up">Ablation: Effect of Representation Forcing</h3>
+        <div class="full-width-container" data-aos="fade-up" data-aos-delay="100">
+          <div class="has-text-centered">
+            <img src="./static/images/compare.png" alt="Qualitative comparison with and without RF" class="full-width-comparison">
+            <div class="caption-container">
+              <div class="content has-text-justified figure-caption" data-aos="fade-up" data-aos-delay="150">
+                <p>
+                  <strong>Qualitative comparison of pixel-space generation with and without RF.</strong> Without RF, the model produces images with poor structure — distorted object shapes and incoherent compositions. With RF, the model generates more coherent structures by first predicting high-level visual representations before pixel rendering. Quantitatively, RF lifts pixel-space GenEval from 0.25 to <strong>0.76</strong>, matching the VAE-based counterpart at 0.77.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ BibTeX ============ -->
+<section class="section" id="BibTeX">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3 title-centered" data-aos="fade-up">BibTeX</h2>
+        <div data-aos="fade-up" data-aos-delay="100">
+<pre><code>@article{wang2026representation,
+  title={Representation Forcing for Bottleneck-Free Unified Multimodal Models},
+  author={Wang, Yuqing and Lin, Zhijie and Yang, Ceyuan and Zhao, Yang and Xiao, Fei and He, Hao and Zhao, Qi and Ding, Zihan and Wang, Fuyun and Wang, Shuai and Zhang, Youliang and Fan, Haoqi and Liu, Xihui},
+  journal={arXiv preprint arXiv:XXXX.XXXXX},
+  year={2026}
+}
+</code></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="columns is-centered">
+      <div class="column is-8">
+        <div class="content">
+          <p>
+            The website template is borrowed from <a href="https://nerfies.github.io/">Nerfies</a> under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike 4.0 International License</a>.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    AOS.init({ duration: 800, easing: 'ease', once: true });
+  });
+  document.addEventListener('DOMContentLoaded', () => {
+    const $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
+    if ($navbarBurgers.length > 0) {
+      $navbarBurgers.forEach(el => {
+        el.addEventListener('click', () => {
+          const target = el.dataset.target;
+          const $target = document.getElementById(target);
+          el.classList.toggle('is-active');
+          $target.classList.toggle('is-active');
+        });
+      });
+    }
+  });
+</script>
+
+</body>
+</html>
