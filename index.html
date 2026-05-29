@@ -218,6 +218,35 @@
     }
     .delta-up { color: #2a9d4a; font-size: 0.78rem; }
     .delta-down { color: #c0392b; font-size: 0.78rem; }
+
+    /* ============ Intro hook (between hero and first image) ============ */
+    .intro-hook { padding: 0.5rem 0 1.5rem 0; }
+    .intro-hook .hook-question {
+      font-size: 1.7rem;
+      line-height: 1.35;
+      color: #1a1a1a;
+      font-style: italic;
+      font-weight: 400;
+      margin-bottom: 0.4rem;
+      text-align: center;
+    }
+    .intro-hook .hook-answer {
+      font-size: 2.6rem;
+      font-weight: 700;
+      color: #0074D9;
+      margin-bottom: 1.4rem;
+      letter-spacing: -0.02em;
+      text-align: center;
+    }
+    .intro-hook .hook-body {
+      font-size: 1.05rem;
+      line-height: 1.7;
+      color: #2a2a2a;
+      max-width: 740px;
+      margin: 0 auto 1rem auto;
+      text-align: justify;
+    }
+    .intro-hook .hook-body strong { color: #0074D9; font-weight: 600; }
   </style>
 </head>
 <body>
@@ -311,7 +340,25 @@
   </div>
 </section>
 
-<!-- ============ 1. Demo gallery (image first) ============ -->
+<!-- ============ 1. Intro hook ============ -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered">
+      <div class="column is-four-fifths intro-hook">
+        <p class="hook-question" data-aos="fade-up">What lies between language and pixels?</p>
+        <p class="hook-answer" data-aos="fade-up" data-aos-delay="150">Representation.</p>
+        <p class="hook-body" data-aos="fade-up" data-aos-delay="250">
+          We propose to ground visual representation in the decoder of a unified model. The decoder learns to predict it from text, just as the encoder reads it from images. Understanding and generation then meet in a single representation space, learned end to end, with no frozen VAE in between.
+        </p>
+        <p class="hook-body" data-aos="fade-up" data-aos-delay="300">
+          We call this <strong>Representation Forcing</strong>: the encoder's representations force the decoder to learn the same visual structure, and the decoder's predictions, in turn, force the pixels to follow it.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 2. Demo gallery ============ -->
 <section class="section tight">
   <div class="full-width-container">
     <div class="content" data-aos="fade-up">
